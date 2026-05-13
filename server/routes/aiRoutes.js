@@ -250,14 +250,21 @@ router.get(
 
     } catch (error) {
 
-      console.log(error.message)
+      console.log(
+    error.response?.data ||
+    error.message
+  )
 
-      res.status(500).json({
+  res.status(500).json({
 
-        success: false,
-        message: "Failed to fetch scripts"
+    success: false,
 
-      })
+    message:
+      error.response?.data?.error?.message ||
+      error.message ||
+      "AI generation failed"
+
+  })
 
     }
 

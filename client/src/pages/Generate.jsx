@@ -47,8 +47,11 @@ const Generate = () => {
 
       console.log(error)
 
-      setResult("Failed to generate script.")
-
+      setResult(
+  error.response?.data?.message ||
+  error.message ||
+  "Failed to generate script."
+)
     }
 
     setLoading(false)
@@ -74,7 +77,8 @@ const Generate = () => {
     { value: "Food", label: "Food" },
     { value: "Fashion", label: "Fashion" },
     { value: "Travel", label: "Travel" },
-    { value: "Education", label: "Education" }
+    { value: "Education", label: "Education" },
+    { value: "Lifestyle", label: "Lifestyle" }
   ]
 
   const platformOptions = [
@@ -87,7 +91,8 @@ const Generate = () => {
     { value: "Professional", label: "Professional" },
     { value: "Funny", label: "Funny" },
     { value: "Motivational", label: "Motivational" },
-    { value: "Cinematic", label: "Cinematic" }
+    { value: "Cinematic", label: "Cinematic" },
+    { value: "Documentary", label: "Documentary" }
   ]
 
   const customSelectStyles = {
@@ -283,15 +288,51 @@ const Generate = () => {
 
           </div>
 
-          <div className="bg-black border border-zinc-700 rounded-2xl p-6 h-[650px] overflow-y-auto text-zinc-300">
+          <div className="bg-black border border-zinc-700 rounded-2xl p-8 h-[650px] overflow-y-auto">
 
-            <div className="prose prose-invert max-w-none">
+            <ReactMarkdown
+              components={{
 
-              <ReactMarkdown>
-                {result || "Your AI generated script will appear here..."}
-              </ReactMarkdown>
+                h1: ({ children }) => (
+                  <h1 className="text-5xl font-extrabold text-lime-400 mb-8 leading-tight border-b border-lime-400/20 pb-4">
+                    {children}
+                  </h1>
+                ),
 
-            </div>
+                h2: ({ children }) => (
+                  <h2 className="text-4xl font-bold text-lime-300 mt-10 mb-6 border-b border-lime-400/10 pb-3">
+                    {children}
+                  </h2>
+                ),
+
+                h3: ({ children }) => (
+                  <h3 className="text-2xl font-bold text-white mt-8 mb-4">
+                    {children}
+                  </h3>
+                ),
+
+                p: ({ children }) => (
+                  <p className="text-zinc-200 text-xl leading-10 mb-6">
+                    {children}
+                  </p>
+                ),
+
+                strong: ({ children }) => (
+                  <strong className="text-white font-extrabold">
+                    {children}
+                  </strong>
+                ),
+
+                li: ({ children }) => (
+                  <li className="ml-6 list-disc text-zinc-300 text-lg mb-3">
+                    {children}
+                  </li>
+                )
+
+              }}
+            >
+              {result || "Your AI generated script will appear here..."}
+            </ReactMarkdown>
 
           </div>
 
