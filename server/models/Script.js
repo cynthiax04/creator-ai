@@ -1,13 +1,32 @@
 const mongoose = require("mongoose")
 
-const scriptSchema = new mongoose.Schema({
-  topic: String,
-  niche: String,
-  platform: String,
-  style: String,
-  content: String,
-}, {
-  timestamps: true
-})
+const scriptSchema = new mongoose.Schema(
 
-module.exports = mongoose.model("Script", scriptSchema)
+  {
+
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+
+    topic: String,
+
+    niche: String,
+
+    platform: String,
+
+    style: String,
+
+    content: String
+
+  },
+
+  {
+    timestamps: true
+  }
+
+)
+
+module.exports =
+  mongoose.model("Script", scriptSchema)

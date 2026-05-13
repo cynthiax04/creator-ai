@@ -1,17 +1,78 @@
 const express = require("express")
 const router = express.Router()
+
 const axios = require("axios")
+const jwt = require("jsonwebtoken")
 
 const Script = require("../models/Script")
 
-// GENERATE AI SCRIPT
-router.post("/generate", async (req, res) => {
+// AUTH MIDDLEWARE
+const authMiddleware = (req, res, next) => {
 
   try {
 
-    const { topic, niche, platform, style } = req.body
+    const authHeader =
+      req.headers.authorization
 
-    const prompt = `
+    if (!authHeader) {
+
+      return res.status(401).json({
+        success: false,
+        message: "No token provided"
+      })
+
+    }
+
+    const token =
+      authHeader.split(" ")[1]
+
+    if (!token) {
+
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token"
+      })
+
+    }
+
+    const decoded = jwt.verify(
+      token,
+      "secretkey"
+    )
+
+    req.userId = decoded.id
+
+    next()
+
+  } catch (error) {
+
+    console.log(error.message)
+
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized"
+    })
+
+  }
+
+}
+
+// GENERATE AI SCRIPT
+router.post(
+  "/generate",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const {
+        topic,
+        niche,
+        platform,
+        style
+      } = req.body
+
+      const prompt = `
 Generate a PREMIUM cinematic short-form content script.
 
 IMPORTANT:
@@ -91,101 +152,154 @@ Requirements:
 Make the output beautiful for markdown rendering.
 `
 
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
+      const response = await axios.post(
+
+        `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+
+        {
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ]
+        }
+
+      )
+
+      const data =
+        response.data.candidates?.[0]
+        ?.content?.parts?.[0]?.text
+
+      if (!data) {
+
+        return res.status(500).json({
+          success: false,
+          message: "No AI response generated"
+        })
+
       }
-    )
 
-    const data =
-      response.data.candidates[0].content.parts[0].text
+      // SAVE SCRIPT
+      await Script.create({
 
-    // SAVE SCRIPT TO MONGODB
-    await Script.create({
-      topic,
-      niche,
-      platform,
-      style,
-      content: data
-    })
+        userId: req.userId,
 
-    res.json({
-      success: true,
-      data
-    })
+        topic,
+        niche,
+        platform,
+        style,
+        content: data
 
-  } catch (error) {
+      })
 
-    console.log(error.response?.data || error.message)
+      res.json({
 
-    res.status(500).json({
-      success: false,
-      message: "AI generation failed"
-    })
+        success: true,
+        data
 
-  }
+      })
 
-})
+    } catch (error) {
 
-// FETCH ALL SAVED SCRIPTS
-router.get("/scripts", async (req, res) => {
+      console.log(
+        error.response?.data ||
+        error.message
+      )
 
-  try {
+      res.status(500).json({
 
-    const scripts = await Script.find().sort({
-      createdAt: -1
-    })
+        success: false,
+        message: "AI generation failed"
 
-    res.json({
-      success: true,
-      scripts
-    })
+      })
 
-  } catch (error) {
-
-    console.log(error.message)
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch scripts"
-    })
+    }
 
   }
+)
 
-})
+// FETCH USER SCRIPTS
+router.get(
+  "/scripts",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const scripts =
+        await Script.find({
+
+          userId: req.userId
+
+        }).sort({
+
+          createdAt: -1
+
+        })
+
+      res.json({
+
+        success: true,
+        scripts
+
+      })
+
+    } catch (error) {
+
+      console.log(error.message)
+
+      res.status(500).json({
+
+        success: false,
+        message: "Failed to fetch scripts"
+
+      })
+
+    }
+
+  }
+)
 
 // DELETE SCRIPT
-router.delete("/scripts/:id", async (req, res) => {
+router.delete(
+  "/scripts/:id",
+  authMiddleware,
+  async (req, res) => {
 
-  try {
+    try {
 
-    await Script.findByIdAndDelete(req.params.id)
+      await Script.findOneAndDelete({
 
-    res.json({
-      success: true,
-      message: "Script deleted"
-    })
+        _id: req.params.id,
+        userId: req.userId
 
-  } catch (error) {
+      })
 
-    console.log(error.message)
+      res.json({
 
-    res.status(500).json({
-      success: false,
-      message: "Delete failed"
-    })
+        success: true,
+        message: "Script deleted"
+
+      })
+
+    } catch (error) {
+
+      console.log(error.message)
+
+      res.status(500).json({
+
+        success: false,
+        message: "Delete failed"
+
+      })
+
+    }
 
   }
-
-})
+)
 
 module.exports = router

@@ -6,13 +6,14 @@ const path = require("path")
 require("dotenv").config()
 
 const aiRoutes = require("./routes/aiRoutes")
+const authRoutes = require("./routes/authRoutes")
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-// MongoDB Connection
+// MONGODB CONNECTION
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
   console.log("MongoDB Connected")
@@ -21,7 +22,8 @@ mongoose.connect(process.env.MONGO_URI)
   console.log(err)
 })
 
-// API Routes
+// API ROUTES
+app.use("/api/auth", authRoutes)
 app.use("/api/ai", aiRoutes)
 
 // SERVE FRONTEND
@@ -31,8 +33,16 @@ app.use(
   )
 )
 
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "../client/dist/index.html"))
+// REACT ROUTING FIX
+app.get("/*splat", (req, res) => {
+
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../client/dist/index.html"
+    )
+  )
+
 })
 
 const PORT = process.env.PORT || 5000
