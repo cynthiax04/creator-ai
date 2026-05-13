@@ -22,7 +22,7 @@ const Dashboard = () => {
 
       const response = await axios.get(
 
-        "http://localhost:5000/api/ai/scripts",
+        "https://creator-ai-vqnf.onrender.com/api/ai/scripts",
 
         {
           headers: {
@@ -50,7 +50,7 @@ const Dashboard = () => {
 
       await axios.delete(
 
-        `http://localhost:5000/api/ai/scripts/${id}`,
+        `https://creator-ai-vqnf.onrender.com/api/ai/scripts/${id}`,
 
         {
           headers: {

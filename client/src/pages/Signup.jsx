@@ -33,7 +33,7 @@ const Signup = () => {
       const response =
         await axios.post(
 
-          "http://localhost:5000/api/auth/signup",
+          "https://creator-ai-vqnf.onrender.com/api/auth/signup",
 
           {
             username,
